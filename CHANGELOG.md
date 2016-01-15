@@ -18,6 +18,7 @@
 - [#5706](https://github.com/influxdata/influxdb/pull/5706): Cluster setup cleanup
 - [#5691](https://github.com/influxdata/influxdb/pull/5691): Remove associated shard data when retention policies are dropped.
 - [#5758](https://github.com/influxdata/influxdb/pull/5758): TSM engine stats for cache, WAL, and filestore. Thanks @jonseymour
+- [#5372](https://github.com/influxdata/influxdb/pull/5372): Faster shard loading
 
 ### Bugfixes
 
@@ -76,6 +77,7 @@ This release also changes how clusters are setup. The config file has changed so
 - [#5460](https://github.com/influxdata/influxdb/pull/5460): Prevent exponential growth in CLI history. Thanks @sczk!
 - [#5522](https://github.com/influxdata/influxdb/pull/5522): Optimize tsm1 cache to reduce memory consumption and GC scan time.
 - [#5565](https://github.com/influxdata/influxdb/pull/5565): Add configuration for time precision with UDP services. - @tpitale
+- [#5226](https://github.com/influxdata/influxdb/pull/5226): b*1 to tsm1 shard conversion tool.
 
 ### Bugfixes
 - [#5129](https://github.com/influxdata/influxdb/pull/5129): Ensure precision flag is respected by CLI. Thanks @e-dard
