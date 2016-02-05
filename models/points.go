@@ -428,7 +428,7 @@ func scanTags(buf []byte, i int, indices []int) (int, int, []int, error) {
 // scanTagsKey scans each character in a tag key.
 func scanTagsKey(buf []byte, i int) (int, error) {
 	// First character of the key.
-	if i >= len(buf) || buf[i] == ' ' || buf[i] == ',' || buf[i] == '=' {
+	if i >= len(buf) || buf[i] == ',' || buf[i] == ' ' || buf[i] == '=' {
 		// cpu,{'', ' ', ',', '='}
 		return i, fmt.Errorf("missing tag key")
 	}
@@ -455,15 +455,20 @@ func scanTagsKey(buf []byte, i int) (int, error) {
 		}
 
 		// Have we hit an unescaped comma or space?
-		if (buf[i] == ' ' || buf[i] == ',') && !escaped {
+		if (buf[i] == ',' || buf[i] == ' ') && !escaped {
 			// cpu,tag{' ', ','}
 			return i, fmt.Errorf("missing tag value")
 		}
 
-		// Found the tag value.
+		// Move on to the tag value.
 		if buf[i] == '=' && !escaped {
 			// cpu,tag=
 			return i + 1, nil
+		}
+
+		// Backslashes must escape valid characters.
+		if escaped && buf[i] != '\\' && buf[i] != ',' && buf[i] != ' ' && buf[i] != '=' {
+			return i, fmt.Errorf("invalid escape sequence")
 		}
 
 		if escaped {
@@ -478,6 +483,8 @@ func scanTagsValue(buf []byte, i int) (int, int, error) {
 	if i >= len(buf) || buf[i] == ',' || buf[i] == ' ' {
 		// cpu,tag={',', ' '}
 		return -1, i, fmt.Errorf("missing tag value")
+	} else if buf[i] == '=' {
+		return -1, i, fmt.Errorf("invalid tag format")
 	}
 
 	var escaped bool
@@ -502,12 +509,6 @@ func scanTagsValue(buf []byte, i int) (int, int, error) {
 			continue
 		}
 
-		// An unescaped equals sign is an invalid tag value.
-		if buf[i] == '=' && !escaped {
-			// cpu,tag={'=', 'fo=o'}
-			return -1, i, fmt.Errorf("invalid tag format")
-		}
-
 		// Move onto next tag.
 		if buf[i] == ',' && !escaped {
 			// cpu,tag=foo,
@@ -518,6 +519,17 @@ func scanTagsValue(buf []byte, i int) (int, int, error) {
 		// cpu, tag=foo\= value=1.0
 		if buf[i] == ' ' && !escaped {
 			return fieldsState, i, nil
+		}
+
+		// An unescaped equals sign is an invalid tag value.
+		if buf[i] == '=' && !escaped {
+			// cpu,tag={'=', 'fo=o'}
+			return -1, i, fmt.Errorf("invalid tag format")
+		}
+
+		// Backslashes must escape valid characters.
+		if escaped && buf[i] != '\\' && buf[i] != ',' && buf[i] != ' ' && buf[i] != '=' {
+			return -1, i, fmt.Errorf("invalid escape sequence")
 		}
 
 		if escaped {
