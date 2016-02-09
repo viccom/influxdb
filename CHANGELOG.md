@@ -1,6 +1,13 @@
+## v0.10.2 [2016-02-29]
+
+### Bugfixes
+
+- [#TODO](https://github.com/influxdata/influxdb/pull/TODO): Fix panic when dropping subscription for unknown retention policy.
+
 ## v0.10.1 [2016-02-18]
 
 ### Bugfixes
+
 - [#5696](https://github.com/influxdata/influxdb/issues/5696): Do not drop the database when creating with a retention policy
 - [#5724](https://github.com/influxdata/influxdb/issues/5724): influx\_tsm doesn't close file handles properly
 - [#5606](https://github.com/influxdata/influxdb/issues/5606): TSM conversion reproducibly drops data silently
