@@ -13,6 +13,8 @@ func RewriteStatement(stmt Statement) (Statement, error) {
 		return rewriteShowMeasurementsStatement(stmt)
 	case *ShowTagKeysStatement:
 		return rewriteShowTagKeysStatement(stmt)
+	case *ShowTagValuesStatement:
+		return rewriteShowTagValuesStatement(stmt)
 	default:
 		return stmt, nil
 	}
@@ -140,6 +142,91 @@ func rewriteShowTagKeysStatement(stmt *ShowTagKeysStatement) (Statement, error) 
 		},
 		Sources: []Source{
 			&Measurement{Name: "_tagKeys"},
+		},
+		Condition:  condition,
+		Offset:     stmt.Offset,
+		Limit:      stmt.Limit,
+		SortFields: stmt.SortFields,
+		OmitTime:   true,
+		Dedupe:     true,
+	}, nil
+}
+
+func rewriteShowTagValuesStatement(stmt *ShowTagValuesStatement) (Statement, error) {
+	// Check for time in WHERE clause (not supported).
+	if HasTimeExpr(stmt.Condition) {
+		return nil, errors.New("SHOW TAG VALUES doesn't support time in WHERE clause")
+	}
+
+	condition := stmt.Condition
+	if len(stmt.Sources) > 0 {
+		if source, ok := stmt.Sources[0].(*Measurement); ok {
+			var expr Expr
+			if source.Regex != nil {
+				expr = &BinaryExpr{
+					Op:  EQREGEX,
+					LHS: &VarRef{Val: "name"},
+					RHS: &RegexLiteral{Val: source.Regex.Val},
+				}
+			} else if source.Name != "" {
+				expr = &BinaryExpr{
+					Op:  EQ,
+					LHS: &VarRef{Val: "name"},
+					RHS: &StringLiteral{Val: source.Name},
+				}
+			}
+
+			// Set condition or "AND" together.
+			if condition == nil {
+				condition = expr
+			} else {
+				condition = &BinaryExpr{Op: AND, LHS: expr, RHS: condition}
+			}
+		}
+	}
+
+	if len(stmt.TagKeys) > 0 {
+		var expr Expr
+		for _, tagKey := range stmt.TagKeys {
+			if expr != nil {
+				expr = &BinaryExpr{
+					Op:  OR,
+					LHS: expr,
+					RHS: &BinaryExpr{
+						Op:  EQ,
+						LHS: &VarRef{Val: "key"},
+						RHS: &StringLiteral{Val: tagKey},
+					},
+				}
+			} else {
+				expr = &BinaryExpr{
+					Op:  EQ,
+					LHS: &VarRef{Val: "key"},
+					RHS: &StringLiteral{Val: tagKey},
+				}
+			}
+		}
+
+		// Wrap in parenthesis if we have more than 1 tag key.
+		if len(stmt.TagKeys) > 1 {
+			expr = &ParenExpr{Expr: expr}
+		}
+
+		// Set condition or "AND" together.
+		if condition == nil {
+			condition = expr
+		} else {
+			condition = &BinaryExpr{Op: AND, LHS: condition, RHS: expr}
+		}
+	}
+
+	return &SelectStatement{
+		Fields: []*Field{
+			{Expr: &VarRef{Val: "key"}},
+			{Expr: &VarRef{Val: "value"}},
+		},
+		Sources: []Source{
+			&Measurement{Name: "_tags"},
 		},
 		Condition:  condition,
 		Offset:     stmt.Offset,

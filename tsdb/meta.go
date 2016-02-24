@@ -142,7 +142,7 @@ func (d *DatabaseIndex) TagsForSeries(key string) map[string]string {
 	return ss.Tags
 }
 
-// measurementsByExpr takes and expression containing only tags and returns
+// measurementsByExpr takes an expression containing only tags and returns
 // a list of matching *Measurement.
 func (d *DatabaseIndex) measurementsByExpr(expr influxql.Expr) (Measurements, error) {
 	switch e := expr.(type) {
@@ -300,6 +300,108 @@ func (d *DatabaseIndex) measurementsByRegex(re *regexp.Regexp) Measurements {
 		}
 	}
 	return matches
+}
+
+func (d *DatabaseIndex) measurementsByTagKeys(expr influxql.Expr) (Measurements, []string, error) {
+	switch e := expr.(type) {
+	case *influxql.BinaryExpr:
+		switch e.Op {
+		case influxql.EQ, influxql.NEQ, influxql.EQREGEX, influxql.NEQREGEX:
+			tag, ok := e.LHS.(*influxql.VarRef)
+			if !ok {
+				return nil, nil, fmt.Errorf("left side of '%s' must be a tag key", e.Op.String())
+			}
+
+			tf := TagFilter{
+				Op:  e.Op,
+				Key: tag.Val,
+			}
+
+			if influxql.IsRegexOp(e.Op) {
+				re, ok := e.RHS.(*influxql.RegexLiteral)
+				if !ok {
+					return nil, nil, fmt.Errorf("right side of '%s' must be a regular expression", e.Op.String())
+				}
+				tf.Regex = re.Val
+			} else {
+				s, ok := e.RHS.(*influxql.StringLiteral)
+				if !ok {
+					return nil, nil, fmt.Errorf("right side of '%s' must be a tag value string", e.Op.String())
+				}
+				tf.Value = s.Val
+			}
+
+			switch tag.Val {
+			case "name":
+				mms := d.measurementsByNameFilter(tf.Op, tf.Value, tf.Regex)
+				tagsMap := make(map[string]struct{})
+				for _, mm := range mms {
+					for _, key := range mm.TagKeys() {
+						tagsMap[key] = struct{}{}
+					}
+				}
+
+				tags := make([]string, 0, len(tagsMap))
+				for key := range tagsMap {
+					tags = append(tags, key)
+				}
+				sort.Strings(tags)
+				return mms, tags, nil
+			case "key":
+				return d.Measurements(), []string{tf.Value}, nil
+			}
+		case influxql.OR, influxql.AND:
+			lhsIDs, lhsTags, err := d.measurementsByTagKeys(e.LHS)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			rhsIDs, rhsTags, err := d.measurementsByTagKeys(e.RHS)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			if e.Op == influxql.OR {
+				tagsMap := make(map[string]struct{})
+				for _, tag := range lhsTags {
+					tagsMap[tag] = struct{}{}
+				}
+				for _, tag := range rhsTags {
+					tagsMap[tag] = struct{}{}
+				}
+
+				tags := make([]string, 0, len(tagsMap))
+				for tag := range tagsMap {
+					tags = append(tags, tag)
+				}
+				return lhsIDs.union(rhsIDs), tags, nil
+			}
+
+			size := 0
+			tagsMap := make(map[string]bool)
+			for _, tag := range lhsTags {
+				tagsMap[tag] = false
+			}
+			for _, tag := range rhsTags {
+				if _, ok := tagsMap[tag]; ok {
+					tagsMap[tag] = true
+					size++
+				}
+			}
+
+			tags := make([]string, 0, size)
+			for tag, ok := range tagsMap {
+				if !ok {
+					continue
+				}
+				tags = append(tags, tag)
+			}
+			return lhsIDs.intersect(rhsIDs), tags, nil
+		}
+	case *influxql.ParenExpr:
+		return d.measurementsByTagKeys(e.Expr)
+	}
+	return nil, nil, fmt.Errorf("%#v", expr)
 }
 
 // Measurements returns a list of all measurements.

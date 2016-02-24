@@ -60,6 +60,18 @@ func TestRewriteStatement(t *testing.T) {
 			s:    `SELECT tagKey FROM _tagKeys WHERE "name" = 'cpu' AND region = 'uswest'`,
 		},
 		{
+			stmt: `SHOW TAG VALUES WITH KEY = region`,
+			s:    `SELECT "key", value FROM _tags WHERE "key" = 'region'`,
+		},
+		{
+			stmt: `SHOW TAG VALUES FROM cpu WITH KEY = region`,
+			s:    `SELECT "key", value FROM _tags WHERE "name" = 'cpu' AND "key" = 'region'`,
+		},
+		{
+			stmt: `SHOW TAG VALUES FROM cpu WITH KEY IN (region, host)`,
+			s:    `SELECT "key", value FROM _tags WHERE "name" = 'cpu' AND ("key" = 'region' OR "key" = 'host')`,
+		},
+		{
 			stmt: `SELECT value FROM cpu`,
 			s:    `SELECT value FROM cpu`,
 		},
