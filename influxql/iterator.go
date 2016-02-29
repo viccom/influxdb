@@ -943,7 +943,7 @@ func decodeInterval(pb *internal.Interval) Interval {
 // reduceOptions represents options for performing reductions on windows of points.
 type ReduceOptions struct {
 	StartTime int64
-	endTime   int64
+	EndTime   int64
 }
 
 type nilFloatIterator struct{}

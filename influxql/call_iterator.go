@@ -940,7 +940,7 @@ func (itr *integerReduceFloatIterator) reduce() []*FloatPoint {
 
 	var reduceOptions = ReduceOptions{
 		StartTime: startTime,
-		endTime:   endTime,
+		EndTime:   endTime,
 	}
 
 	// Create points by tags.
@@ -1032,7 +1032,7 @@ func (itr *integerReduceSliceFloatIterator) reduce() []FloatPoint {
 
 	var reduceOptions = ReduceOptions{
 		StartTime: startTime,
-		endTime:   endTime,
+		EndTime:   endTime,
 	}
 
 	// Group points by name and tagset.

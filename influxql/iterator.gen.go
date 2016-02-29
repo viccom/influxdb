@@ -658,7 +658,7 @@ func (itr *floatReduceIterator) reduce() []*FloatPoint {
 
 	var reduceOptions = ReduceOptions{
 		StartTime: startTime,
-		endTime:   endTime,
+		EndTime:   endTime,
 	}
 
 	// Create points by tags.
@@ -750,7 +750,7 @@ func (itr *floatReduceSliceIterator) reduce() []FloatPoint {
 
 	var reduceOptions = ReduceOptions{
 		StartTime: startTime,
-		endTime:   endTime,
+		EndTime:   endTime,
 	}
 
 	// Group points by name and tagset.
@@ -1593,7 +1593,7 @@ func (itr *integerReduceIterator) reduce() []*IntegerPoint {
 
 	var reduceOptions = ReduceOptions{
 		StartTime: startTime,
-		endTime:   endTime,
+		EndTime:   endTime,
 	}
 
 	// Create points by tags.
@@ -1685,7 +1685,7 @@ func (itr *integerReduceSliceIterator) reduce() []IntegerPoint {
 
 	var reduceOptions = ReduceOptions{
 		StartTime: startTime,
-		endTime:   endTime,
+		EndTime:   endTime,
 	}
 
 	// Group points by name and tagset.
@@ -2528,7 +2528,7 @@ func (itr *stringReduceIterator) reduce() []*StringPoint {
 
 	var reduceOptions = ReduceOptions{
 		StartTime: startTime,
-		endTime:   endTime,
+		EndTime:   endTime,
 	}
 
 	// Create points by tags.
@@ -2620,7 +2620,7 @@ func (itr *stringReduceSliceIterator) reduce() []StringPoint {
 
 	var reduceOptions = ReduceOptions{
 		StartTime: startTime,
-		endTime:   endTime,
+		EndTime:   endTime,
 	}
 
 	// Group points by name and tagset.
@@ -3463,7 +3463,7 @@ func (itr *booleanReduceIterator) reduce() []*BooleanPoint {
 
 	var reduceOptions = ReduceOptions{
 		StartTime: startTime,
-		endTime:   endTime,
+		EndTime:   endTime,
 	}
 
 	// Create points by tags.
@@ -3555,7 +3555,7 @@ func (itr *booleanReduceSliceIterator) reduce() []BooleanPoint {
 
 	var reduceOptions = ReduceOptions{
 		StartTime: startTime,
-		endTime:   endTime,
+		EndTime:   endTime,
 	}
 
 	// Group points by name and tagset.
