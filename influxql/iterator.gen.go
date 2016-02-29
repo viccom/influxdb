@@ -626,7 +626,7 @@ func (itr *floatChanIterator) Next() *FloatPoint { return <-itr.c }
 // floatReduceIterator executes a reducer for every interval and buffers the result.
 type floatReduceIterator struct {
 	input  *bufFloatIterator
-	fn     floatReduceFunc
+	fn     FloatReduceFunc
 	opt    IteratorOptions
 	points []*FloatPoint
 }
@@ -656,8 +656,8 @@ func (itr *floatReduceIterator) reduce() []*FloatPoint {
 	// Calculate next window.
 	startTime, endTime := itr.opt.Window(itr.input.peekTime())
 
-	var reduceOptions = reduceOptions{
-		startTime: startTime,
+	var reduceOptions = ReduceOptions{
+		StartTime: startTime,
 		endTime:   endTime,
 	}
 
@@ -713,12 +713,12 @@ func (itr *floatReduceIterator) reduce() []*FloatPoint {
 }
 
 // floatReduceFunc is the function called by a FloatPoint reducer.
-type floatReduceFunc func(prev, curr *FloatPoint, opt *reduceOptions) (t int64, v float64, aux []interface{})
+type FloatReduceFunc func(prev, curr *FloatPoint, opt *ReduceOptions) (t int64, v float64, aux []interface{})
 
 // floatReduceSliceIterator executes a reducer on all points in a window and buffers the result.
 type floatReduceSliceIterator struct {
 	input  *bufFloatIterator
-	fn     floatReduceSliceFunc
+	fn     FloatReduceSliceFunc
 	opt    IteratorOptions
 	points []FloatPoint
 }
@@ -748,8 +748,8 @@ func (itr *floatReduceSliceIterator) reduce() []FloatPoint {
 	// Calculate next window.
 	startTime, endTime := itr.opt.Window(itr.input.peekTime())
 
-	var reduceOptions = reduceOptions{
-		startTime: startTime,
+	var reduceOptions = ReduceOptions{
+		StartTime: startTime,
 		endTime:   endTime,
 	}
 
@@ -813,13 +813,13 @@ func (itr *floatReduceSliceIterator) reduce() []FloatPoint {
 }
 
 // floatReduceSliceFunc is the function called by a FloatPoint slice reducer.
-type floatReduceSliceFunc func(a []FloatPoint, opt *reduceOptions) []FloatPoint
+type FloatReduceSliceFunc func(a []FloatPoint, opt *ReduceOptions) []FloatPoint
 
 // floatReduceIterator executes a function to modify an existing point for every
 // output of the input iterator.
 type floatTransformIterator struct {
 	input FloatIterator
-	fn    floatTransformFunc
+	fn    FloatTransformFunc
 }
 
 // Close closes the iterator and all child iterators.
@@ -837,13 +837,13 @@ func (itr *floatTransformIterator) Next() *FloatPoint {
 // floatTransformFunc creates or modifies a point.
 // The point passed in may be modified and returned rather than allocating a
 // new point if possible.
-type floatTransformFunc func(p *FloatPoint) *FloatPoint
+type FloatTransformFunc func(p *FloatPoint) *FloatPoint
 
 // floatReduceIterator executes a function to modify an existing point for every
 // output of the input iterator.
 type floatBoolTransformIterator struct {
 	input FloatIterator
-	fn    floatBoolTransformFunc
+	fn    FloatBoolTransformFunc
 }
 
 // Close closes the iterator and all child iterators.
@@ -861,7 +861,7 @@ func (itr *floatBoolTransformIterator) Next() *BooleanPoint {
 // floatBoolTransformFunc creates or modifies a point.
 // The point passed in may be modified and returned rather than allocating a
 // new point if possible.
-type floatBoolTransformFunc func(p *FloatPoint) *BooleanPoint
+type FloatBoolTransformFunc func(p *FloatPoint) *BooleanPoint
 
 // floatDedupeIterator only outputs unique points.
 // This differs from the DistinctIterator in that it compares all aux fields too.
@@ -1561,7 +1561,7 @@ func (itr *integerChanIterator) Next() *IntegerPoint { return <-itr.c }
 // integerReduceIterator executes a reducer for every interval and buffers the result.
 type integerReduceIterator struct {
 	input  *bufIntegerIterator
-	fn     integerReduceFunc
+	fn     IntegerReduceFunc
 	opt    IteratorOptions
 	points []*IntegerPoint
 }
@@ -1591,8 +1591,8 @@ func (itr *integerReduceIterator) reduce() []*IntegerPoint {
 	// Calculate next window.
 	startTime, endTime := itr.opt.Window(itr.input.peekTime())
 
-	var reduceOptions = reduceOptions{
-		startTime: startTime,
+	var reduceOptions = ReduceOptions{
+		StartTime: startTime,
 		endTime:   endTime,
 	}
 
@@ -1648,12 +1648,12 @@ func (itr *integerReduceIterator) reduce() []*IntegerPoint {
 }
 
 // integerReduceFunc is the function called by a IntegerPoint reducer.
-type integerReduceFunc func(prev, curr *IntegerPoint, opt *reduceOptions) (t int64, v int64, aux []interface{})
+type IntegerReduceFunc func(prev, curr *IntegerPoint, opt *ReduceOptions) (t int64, v int64, aux []interface{})
 
 // integerReduceSliceIterator executes a reducer on all points in a window and buffers the result.
 type integerReduceSliceIterator struct {
 	input  *bufIntegerIterator
-	fn     integerReduceSliceFunc
+	fn     IntegerReduceSliceFunc
 	opt    IteratorOptions
 	points []IntegerPoint
 }
@@ -1683,8 +1683,8 @@ func (itr *integerReduceSliceIterator) reduce() []IntegerPoint {
 	// Calculate next window.
 	startTime, endTime := itr.opt.Window(itr.input.peekTime())
 
-	var reduceOptions = reduceOptions{
-		startTime: startTime,
+	var reduceOptions = ReduceOptions{
+		StartTime: startTime,
 		endTime:   endTime,
 	}
 
@@ -1748,13 +1748,13 @@ func (itr *integerReduceSliceIterator) reduce() []IntegerPoint {
 }
 
 // integerReduceSliceFunc is the function called by a IntegerPoint slice reducer.
-type integerReduceSliceFunc func(a []IntegerPoint, opt *reduceOptions) []IntegerPoint
+type IntegerReduceSliceFunc func(a []IntegerPoint, opt *ReduceOptions) []IntegerPoint
 
 // integerReduceIterator executes a function to modify an existing point for every
 // output of the input iterator.
 type integerTransformIterator struct {
 	input IntegerIterator
-	fn    integerTransformFunc
+	fn    IntegerTransformFunc
 }
 
 // Close closes the iterator and all child iterators.
@@ -1772,13 +1772,13 @@ func (itr *integerTransformIterator) Next() *IntegerPoint {
 // integerTransformFunc creates or modifies a point.
 // The point passed in may be modified and returned rather than allocating a
 // new point if possible.
-type integerTransformFunc func(p *IntegerPoint) *IntegerPoint
+type IntegerTransformFunc func(p *IntegerPoint) *IntegerPoint
 
 // integerReduceIterator executes a function to modify an existing point for every
 // output of the input iterator.
 type integerBoolTransformIterator struct {
 	input IntegerIterator
-	fn    integerBoolTransformFunc
+	fn    IntegerBoolTransformFunc
 }
 
 // Close closes the iterator and all child iterators.
@@ -1796,7 +1796,7 @@ func (itr *integerBoolTransformIterator) Next() *BooleanPoint {
 // integerBoolTransformFunc creates or modifies a point.
 // The point passed in may be modified and returned rather than allocating a
 // new point if possible.
-type integerBoolTransformFunc func(p *IntegerPoint) *BooleanPoint
+type IntegerBoolTransformFunc func(p *IntegerPoint) *BooleanPoint
 
 // integerDedupeIterator only outputs unique points.
 // This differs from the DistinctIterator in that it compares all aux fields too.
@@ -2496,7 +2496,7 @@ func (itr *stringChanIterator) Next() *StringPoint { return <-itr.c }
 // stringReduceIterator executes a reducer for every interval and buffers the result.
 type stringReduceIterator struct {
 	input  *bufStringIterator
-	fn     stringReduceFunc
+	fn     StringReduceFunc
 	opt    IteratorOptions
 	points []*StringPoint
 }
@@ -2526,8 +2526,8 @@ func (itr *stringReduceIterator) reduce() []*StringPoint {
 	// Calculate next window.
 	startTime, endTime := itr.opt.Window(itr.input.peekTime())
 
-	var reduceOptions = reduceOptions{
-		startTime: startTime,
+	var reduceOptions = ReduceOptions{
+		StartTime: startTime,
 		endTime:   endTime,
 	}
 
@@ -2583,12 +2583,12 @@ func (itr *stringReduceIterator) reduce() []*StringPoint {
 }
 
 // stringReduceFunc is the function called by a StringPoint reducer.
-type stringReduceFunc func(prev, curr *StringPoint, opt *reduceOptions) (t int64, v string, aux []interface{})
+type StringReduceFunc func(prev, curr *StringPoint, opt *ReduceOptions) (t int64, v string, aux []interface{})
 
 // stringReduceSliceIterator executes a reducer on all points in a window and buffers the result.
 type stringReduceSliceIterator struct {
 	input  *bufStringIterator
-	fn     stringReduceSliceFunc
+	fn     StringReduceSliceFunc
 	opt    IteratorOptions
 	points []StringPoint
 }
@@ -2618,8 +2618,8 @@ func (itr *stringReduceSliceIterator) reduce() []StringPoint {
 	// Calculate next window.
 	startTime, endTime := itr.opt.Window(itr.input.peekTime())
 
-	var reduceOptions = reduceOptions{
-		startTime: startTime,
+	var reduceOptions = ReduceOptions{
+		StartTime: startTime,
 		endTime:   endTime,
 	}
 
@@ -2683,13 +2683,13 @@ func (itr *stringReduceSliceIterator) reduce() []StringPoint {
 }
 
 // stringReduceSliceFunc is the function called by a StringPoint slice reducer.
-type stringReduceSliceFunc func(a []StringPoint, opt *reduceOptions) []StringPoint
+type StringReduceSliceFunc func(a []StringPoint, opt *ReduceOptions) []StringPoint
 
 // stringReduceIterator executes a function to modify an existing point for every
 // output of the input iterator.
 type stringTransformIterator struct {
 	input StringIterator
-	fn    stringTransformFunc
+	fn    StringTransformFunc
 }
 
 // Close closes the iterator and all child iterators.
@@ -2707,13 +2707,13 @@ func (itr *stringTransformIterator) Next() *StringPoint {
 // stringTransformFunc creates or modifies a point.
 // The point passed in may be modified and returned rather than allocating a
 // new point if possible.
-type stringTransformFunc func(p *StringPoint) *StringPoint
+type StringTransformFunc func(p *StringPoint) *StringPoint
 
 // stringReduceIterator executes a function to modify an existing point for every
 // output of the input iterator.
 type stringBoolTransformIterator struct {
 	input StringIterator
-	fn    stringBoolTransformFunc
+	fn    StringBoolTransformFunc
 }
 
 // Close closes the iterator and all child iterators.
@@ -2731,7 +2731,7 @@ func (itr *stringBoolTransformIterator) Next() *BooleanPoint {
 // stringBoolTransformFunc creates or modifies a point.
 // The point passed in may be modified and returned rather than allocating a
 // new point if possible.
-type stringBoolTransformFunc func(p *StringPoint) *BooleanPoint
+type StringBoolTransformFunc func(p *StringPoint) *BooleanPoint
 
 // stringDedupeIterator only outputs unique points.
 // This differs from the DistinctIterator in that it compares all aux fields too.
@@ -3431,7 +3431,7 @@ func (itr *booleanChanIterator) Next() *BooleanPoint { return <-itr.c }
 // booleanReduceIterator executes a reducer for every interval and buffers the result.
 type booleanReduceIterator struct {
 	input  *bufBooleanIterator
-	fn     booleanReduceFunc
+	fn     BooleanReduceFunc
 	opt    IteratorOptions
 	points []*BooleanPoint
 }
@@ -3461,8 +3461,8 @@ func (itr *booleanReduceIterator) reduce() []*BooleanPoint {
 	// Calculate next window.
 	startTime, endTime := itr.opt.Window(itr.input.peekTime())
 
-	var reduceOptions = reduceOptions{
-		startTime: startTime,
+	var reduceOptions = ReduceOptions{
+		StartTime: startTime,
 		endTime:   endTime,
 	}
 
@@ -3518,12 +3518,12 @@ func (itr *booleanReduceIterator) reduce() []*BooleanPoint {
 }
 
 // booleanReduceFunc is the function called by a BooleanPoint reducer.
-type booleanReduceFunc func(prev, curr *BooleanPoint, opt *reduceOptions) (t int64, v bool, aux []interface{})
+type BooleanReduceFunc func(prev, curr *BooleanPoint, opt *ReduceOptions) (t int64, v bool, aux []interface{})
 
 // booleanReduceSliceIterator executes a reducer on all points in a window and buffers the result.
 type booleanReduceSliceIterator struct {
 	input  *bufBooleanIterator
-	fn     booleanReduceSliceFunc
+	fn     BooleanReduceSliceFunc
 	opt    IteratorOptions
 	points []BooleanPoint
 }
@@ -3553,8 +3553,8 @@ func (itr *booleanReduceSliceIterator) reduce() []BooleanPoint {
 	// Calculate next window.
 	startTime, endTime := itr.opt.Window(itr.input.peekTime())
 
-	var reduceOptions = reduceOptions{
-		startTime: startTime,
+	var reduceOptions = ReduceOptions{
+		StartTime: startTime,
 		endTime:   endTime,
 	}
 
@@ -3618,13 +3618,13 @@ func (itr *booleanReduceSliceIterator) reduce() []BooleanPoint {
 }
 
 // booleanReduceSliceFunc is the function called by a BooleanPoint slice reducer.
-type booleanReduceSliceFunc func(a []BooleanPoint, opt *reduceOptions) []BooleanPoint
+type BooleanReduceSliceFunc func(a []BooleanPoint, opt *ReduceOptions) []BooleanPoint
 
 // booleanReduceIterator executes a function to modify an existing point for every
 // output of the input iterator.
 type booleanTransformIterator struct {
 	input BooleanIterator
-	fn    booleanTransformFunc
+	fn    BooleanTransformFunc
 }
 
 // Close closes the iterator and all child iterators.
@@ -3642,13 +3642,13 @@ func (itr *booleanTransformIterator) Next() *BooleanPoint {
 // booleanTransformFunc creates or modifies a point.
 // The point passed in may be modified and returned rather than allocating a
 // new point if possible.
-type booleanTransformFunc func(p *BooleanPoint) *BooleanPoint
+type BooleanTransformFunc func(p *BooleanPoint) *BooleanPoint
 
 // booleanReduceIterator executes a function to modify an existing point for every
 // output of the input iterator.
 type booleanBoolTransformIterator struct {
 	input BooleanIterator
-	fn    booleanBoolTransformFunc
+	fn    BooleanBoolTransformFunc
 }
 
 // Close closes the iterator and all child iterators.
@@ -3666,7 +3666,7 @@ func (itr *booleanBoolTransformIterator) Next() *BooleanPoint {
 // booleanBoolTransformFunc creates or modifies a point.
 // The point passed in may be modified and returned rather than allocating a
 // new point if possible.
-type booleanBoolTransformFunc func(p *BooleanPoint) *BooleanPoint
+type BooleanBoolTransformFunc func(p *BooleanPoint) *BooleanPoint
 
 // booleanDedupeIterator only outputs unique points.
 // This differs from the DistinctIterator in that it compares all aux fields too.

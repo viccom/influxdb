@@ -712,7 +712,7 @@ func (itr *{{.name}}ReduceIterator) reduce() []*{{.Name}}Point {
 }
 
 // {{.name}}ReduceFunc is the function called by a {{.Name}}Point reducer.
-type {{.name}}ReduceFunc func(prev, curr *{{.Name}}Point, opt *reduceOptions) (t int64, v {{.Type}}, aux []interface{})
+type {{.Name}}ReduceFunc func(prev, curr *{{.Name}}Point, opt *reduceOptions) (t int64, v {{.Type}}, aux []interface{})
 
 // {{.name}}ReduceSliceIterator executes a reducer on all points in a window and buffers the result.
 type {{.name}}ReduceSliceIterator struct {
@@ -812,7 +812,7 @@ func (itr *{{.name}}ReduceSliceIterator) reduce() []{{.Name}}Point {
 }
 
 // {{.name}}ReduceSliceFunc is the function called by a {{.Name}}Point slice reducer.
-type {{.name}}ReduceSliceFunc func(a []{{.Name}}Point, opt *reduceOptions) []{{.Name}}Point
+type {{.Name}}ReduceSliceFunc func(a []{{.Name}}Point, opt *reduceOptions) []{{.Name}}Point
 
 // {{.name}}ReduceIterator executes a function to modify an existing point for every
 // output of the input iterator.
@@ -836,7 +836,7 @@ func (itr *{{.name}}TransformIterator) Next() *{{.Name}}Point {
 // {{.name}}TransformFunc creates or modifies a point.
 // The point passed in may be modified and returned rather than allocating a
 // new point if possible.
-type {{.name}}TransformFunc func(p *{{.Name}}Point) *{{.Name}}Point
+type {{.Name}}TransformFunc func(p *{{.Name}}Point) *{{.Name}}Point
 
 // {{.name}}ReduceIterator executes a function to modify an existing point for every
 // output of the input iterator.
@@ -860,7 +860,7 @@ func (itr *{{.name}}BoolTransformIterator) Next() *BooleanPoint {
 // {{.name}}BoolTransformFunc creates or modifies a point.
 // The point passed in may be modified and returned rather than allocating a
 // new point if possible.
-type {{.name}}BoolTransformFunc func(p *{{.Name}}Point) *BooleanPoint
+type {{.Name}}BoolTransformFunc func(p *{{.Name}}Point) *BooleanPoint
 
 // {{.name}}DedupeIterator only outputs unique points.
 // This differs from the DistinctIterator in that it compares all aux fields too.
