@@ -908,7 +908,7 @@ func NewIntegerDerivativeReduceSliceFunc(interval Interval, isNonNegative bool) 
 
 type integerReduceFloatIterator struct {
 	input  *bufIntegerIterator
-	fn     integerReduceFloatFunc
+	fn     IntegerReduceFloatFunc
 	opt    IteratorOptions
 	points []*FloatPoint
 }
@@ -994,7 +994,7 @@ func (itr *integerReduceFloatIterator) reduce() []*FloatPoint {
 	return a
 }
 
-type integerReduceFloatFunc func(prev *FloatPoint, curr *IntegerPoint, opt *ReduceOptions) (int64, float64, []interface{})
+type IntegerReduceFloatFunc func(prev *FloatPoint, curr *IntegerPoint, opt *ReduceOptions) (int64, float64, []interface{})
 
 // integerReduceSliceFloatIterator executes a reducer on all points in a window and buffers the result.
 // This iterator receives an integer iterator but produces a float iterator.
