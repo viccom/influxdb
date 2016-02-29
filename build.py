@@ -148,7 +148,8 @@ def run(command, allow_failure=False, shell=False):
             out = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=shell)
         else:
             out = subprocess.check_output(command.split(), stderr=subprocess.STDOUT)
-        print "[DEBUG] command output: \n{}\n".format(out)
+        if debug:
+            print "[DEBUG] command output: {}".format(out)
     except subprocess.CalledProcessError as e:
         print ""
         print ""
@@ -314,7 +315,7 @@ def upload_packages(packages, bucket_name=None, nightly=False):
     print ""
     return 0
 
-def run_tests(race, parallel, tags, timeout, no_vet):
+def run_tests(race, parallel, timeout, no_vet, tags=[]):
     print "Downloading vet tool..."
     sys.stdout.flush()
     run("go get golang.org/x/tools/cmd/vet")
@@ -323,7 +324,7 @@ def run_tests(race, parallel, tags, timeout, no_vet):
     if parallel is not None:
         print "\tParallel:", parallel
     if tags is not None:
-        print "\tTags:", tags
+        print "\tTags: {}".format(tags)
     if timeout is not None:
         print "\tTimeout:", timeout
     sys.stdout.flush()
@@ -350,25 +351,20 @@ def run_tests(race, parallel, tags, timeout, no_vet):
         test_command += " -race"
     if parallel is not None:
         test_command += " -parallel {}".format(parallel)
-    if tags is not None:
-        test_command += " -tags {}".format(tags)
+    if len(tags) > 0:
+        test_command += " -tags {}".format(','.join(tags))
     if timeout is not None:
         test_command += " -timeout {}".format(timeout)
     test_command += " ./..."
-    code = os.system(test_command)
-    if code != 0:
-        print "Tests Failed"
-        return False
-    else:
-        print "Tests Passed"
-        return True
+    run(test_command)
+    return True
 
 def build(version=None,
           branch=None,
           commit=None,
           platform=None,
           arch=None,
-          nightly=False,
+          nightly=True,
           rc=None,
           race=False,
           clean=False,
@@ -634,7 +630,7 @@ def main():
     upload = False
     test = False
     parallel = None
-    cluster_tests = False
+    test_tags = []
     timeout = None
     iteration = 1
     no_vet = False
@@ -690,7 +686,7 @@ def main():
             parallel = int(arg.split("=")[1])
         elif '--cluster-tests' in arg:
             # Set cluster build tag for tests.
-            tags = "cluster"
+            test_tags.append('cluster')
         elif '--timeout' in arg:
             # Set timeout for tests.
             timeout = arg.split("=")[1]
@@ -773,7 +769,17 @@ def main():
             return 1
 
     if test:
-        if not run_tests(race, parallel, tags, timeout, no_vet):
+        # Generate a build for any tests
+        print "Generating build for tests..."
+        if not build(version=version,
+                     branch=get_current_branch(),
+                     commit=get_current_commit(short=True),
+                     platform=get_system_platform(),
+                     arch=get_system_arch(),
+                     outdir="/usr/local/bin"):
+            print "Could not generate a test build!"
+            return 1
+        if not run_tests(race, parallel, timeout, no_vet, tags=test_tags):
             return 1
         return 0
 
