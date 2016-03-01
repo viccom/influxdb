@@ -50,6 +50,7 @@
 - [#5832](https://github.com/influxdata/influxdb/issues/5832): tsm: cache: need to check that snapshot has been sorted @jonseymour
 - [#5841](https://github.com/influxdata/influxdb/pull/5841): Reduce tsm allocations by converting time.Time to int64
 - [#5842](https://github.com/influxdata/influxdb/issues/5842): Add SeriesList binary marshaling
+- [#5610](https://github.com/influxdata/influxdb/issues/5610): Write into fully-replicated cluster is not replicated across all shards
 
 ## v0.10.1 [2016-02-18]
 
