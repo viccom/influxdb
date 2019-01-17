@@ -1,109 +1,108 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 
-	"github.com/influxdata/influxdb/client"
-	"github.com/influxdata/influxdb/cmd/influx/cli"
-)
-
-// These variables are populated via the Go linker.
-var (
-	version = "0.9"
-)
-
-const (
-	// defaultFormat is the default format of the results when issuing queries
-	defaultFormat = "column"
-
-	// defaultPrecision is the default timestamp format of the results when issuing queries
-	defaultPrecision = "ns"
-
-	// defaultPPS is the default points per second that the import will throttle at
-	// by default it's 0, which means it will not throttle
-	defaultPPS = 0
+	"github.com/influxdata/influxdb/internal/fs"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func main() {
-	c := cli.New(version)
+	Execute()
+}
 
-	fs := flag.NewFlagSet("InfluxDB shell version "+version, flag.ExitOnError)
-	fs.StringVar(&c.Host, "host", client.DefaultHost, "Influxdb host to connect to.")
-	fs.IntVar(&c.Port, "port", client.DefaultPort, "Influxdb port to connect to.")
-	fs.StringVar(&c.Username, "username", c.Username, "Username to connect to the server.")
-	fs.StringVar(&c.Password, "password", c.Password, `Password to connect to the server.  Leaving blank will prompt for password (--password="").`)
-	fs.StringVar(&c.Database, "database", c.Database, "Database to connect to the server.")
-	fs.BoolVar(&c.Ssl, "ssl", false, "Use https for connecting to cluster.")
-	fs.BoolVar(&c.UnsafeSsl, "unsafeSsl", false, "Set this when connecting to the cluster using https and not use SSL verification.")
-	fs.StringVar(&c.Format, "format", defaultFormat, "Format specifies the format of the server responses:  json, csv, or column.")
-	fs.StringVar(&c.Precision, "precision", defaultPrecision, "Precision specifies the format of the timestamp:  rfc3339,h,m,s,ms,u or ns.")
-	fs.StringVar(&c.WriteConsistency, "consistency", "any", "Set write consistency level: any, one, quorum, or all.")
-	fs.BoolVar(&c.Pretty, "pretty", false, "Turns on pretty print for the json format.")
-	fs.StringVar(&c.Execute, "execute", c.Execute, "Execute command and quit.")
-	fs.BoolVar(&c.ShowVersion, "version", false, "Displays the InfluxDB version.")
-	fs.BoolVar(&c.Import, "import", false, "Import a previous database.")
-	fs.IntVar(&c.PPS, "pps", defaultPPS, "How many points per second the import will allow.  By default it is zero and will not throttle importing.")
-	fs.StringVar(&c.Path, "path", "", "path to the file to import")
-	fs.BoolVar(&c.Compressed, "compressed", false, "set to true if the import file is compressed")
+var influxCmd = &cobra.Command{
+	Use:   "influx",
+	Short: "Influx Client",
+	Run:   influxF,
+}
 
-	// Define our own custom usage to print
-	fs.Usage = func() {
-		fmt.Println(`Usage of influx:
-  -version
-       Display the version and exit.
-  -host 'host name'
-       Host to connect to.
-  -port 'port #'
-       Port to connect to.
-  -database 'database name'
-       Database to connect to the server.
-  -password 'password'
-      Password to connect to the server.  Leaving blank will prompt for password (--password '').
-  -username 'username'
-       Username to connect to the server.
-  -ssl
-        Use https for requests.
-  -unsafeSsl
-        Set this when connecting to the cluster using https and not use SSL verification.
-  -execute 'command'
-       Execute command and quit.
-  -format 'json|csv|column'
-       Format specifies the format of the server responses:  json, csv, or column.
-  -precision 'rfc3339|h|m|s|ms|u|ns'
-       Precision specifies the format of the timestamp:  rfc3339, h, m, s, ms, u or ns.
-  -consistency 'any|one|quorum|all'
-       Set write consistency level: any, one, quorum, or all
-  -pretty
-       Turns on pretty print for the json format.
-  -import
-       Import a previous database export from file
-  -pps
-       How many points per second the import will allow.  By default it is zero and will not throttle importing.
-  -path
-       Path to file to import
-  -compressed
-       Set to true if the import file is compressed
+func init() {
+	influxCmd.AddCommand(authorizationCmd)
+	influxCmd.AddCommand(bucketCmd)
+	influxCmd.AddCommand(organizationCmd)
+	influxCmd.AddCommand(queryCmd)
+	influxCmd.AddCommand(replCmd)
+	influxCmd.AddCommand(setupCmd)
+	influxCmd.AddCommand(taskCmd)
+	influxCmd.AddCommand(userCmd)
+	influxCmd.AddCommand(writeCmd)
+}
 
-Examples:
+// Flags contains all the CLI flag values for influx.
+type Flags struct {
+	token string
+	host  string
+	local bool
+}
 
-    # Use influx in a non-interactive mode to query the database "metrics" and pretty print json:
-    $ influx -database 'metrics' -execute 'select * from cpu' -format 'json' -pretty
+var flags Flags
 
-    # Connect to a specific database on startup and set database context:
-    $ influx -database 'metrics' -host 'localhost' -port '8086'
-`)
+func defaultTokenPath() string {
+	dir, err := fs.InfluxDir()
+	if err != nil {
+		return ""
 	}
-	fs.Parse(os.Args[1:])
+	return filepath.Join(dir, "credentials")
+}
 
-	if c.ShowVersion {
-		c.Version()
-		os.Exit(0)
+func getTokenFromPath(path string) (string, error) {
+	b, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
+}
+
+func writeTokenToPath(tok string, path string) error {
+	return ioutil.WriteFile(path, []byte(tok), 0600)
+}
+
+func init() {
+	viper.SetEnvPrefix("INFLUX")
+
+	influxCmd.PersistentFlags().StringVarP(&flags.token, "token", "t", "", "API token to be used throughout client calls")
+	viper.BindEnv("TOKEN")
+	if h := viper.GetString("TOKEN"); h != "" {
+		flags.token = h
+	} else if tok, err := getTokenFromPath(defaultTokenPath()); err == nil {
+		flags.token = tok
 	}
 
-	if err := c.Run(); err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
+	influxCmd.PersistentFlags().StringVar(&flags.host, "host", "http://localhost:9999", "HTTP address of Influx")
+	viper.BindEnv("HOST")
+	if h := viper.GetString("HOST"); h != "" {
+		flags.host = h
+	}
+
+	influxCmd.PersistentFlags().BoolVar(&flags.local, "local", false, "Run commands locally against the filesystem")
+
+	// Override help on all the commands tree
+	walk(influxCmd, func(c *cobra.Command) {
+		c.Flags().BoolP("help", "h", false, fmt.Sprintf("Help for the %s command ", c.Name()))
+	})
+}
+
+func influxF(cmd *cobra.Command, args []string) {
+	cmd.Usage()
+}
+
+// walk calls f for c and all of its children.
+func walk(c *cobra.Command, f func(*cobra.Command)) {
+	f(c)
+	for _, c := range c.Commands() {
+		walk(c, f)
+	}
+}
+
+// Execute executes the influx command
+func Execute() {
+	if err := influxCmd.Execute(); err != nil {
+		fmt.Println(err)
 		os.Exit(1)
 	}
 }
